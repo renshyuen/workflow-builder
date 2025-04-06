@@ -1,6 +1,7 @@
-import { EndNode } from './EndNode.jsx';
 import { PositionLoggerNode } from './PositionLoggerNode.jsx';
+import { EndNode } from './EndNode.jsx';
 import { StartNode } from './StartNode.jsx';
+import { ActionNode } from './ActionNode.jsx';
 
 export const initialNodes = [
     {
@@ -12,7 +13,7 @@ export const initialNodes = [
     },
     {
         id: 'end',
-        data: { label: 'END' },
+        data: { label: 'End' },
         position: { x: 0, y: 100 },
         style: { width: 150, height: 50 },
         type: 'end-node',
@@ -23,5 +24,8 @@ export const nodeTypes = {
     'position-logger': PositionLoggerNode,
     'start-node': StartNode,
     'end-node': EndNode,
-    // add any custom nodes here 
+    'action-node': ActionNode,
+    /**
+     *  custom nodes here
+     */
 };

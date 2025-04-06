@@ -1,4 +1,4 @@
-import AddEdge from './AddEdge.tsx';
+import AddNodeEdge from './AddNodeEdge.tsx';
 
 
 export const initialEdges = [
@@ -6,10 +6,10 @@ export const initialEdges = [
         id: 'start->end',
         source: 'start',
         target: 'end',
-        type: 'custom-add',
+        type: 'add-action-node-edge',
     },
 ];
 
 export const edgeTypes = {
-    'custom-add': AddEdge,
+    'add-action-node-edge': AddNodeEdge,
 };

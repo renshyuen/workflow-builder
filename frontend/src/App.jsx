@@ -31,7 +31,8 @@ export default function App() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            colorMode="system"    
+            colorMode="system" 
+            fitView
         >
             <Background />
             <MiniMap />

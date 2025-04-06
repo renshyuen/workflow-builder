@@ -3,13 +3,17 @@ import { Handle, Position } from '@xyflow/react';
 
 
 export function StartNode({ data }) {
+    const nodeStyle = {
+        position: 'relative',
+    };
+    const handleStyle = {
+        opacity: '0',
+    };
+
     return (
-        <div className='react-flow__node-default' style={{
-            borderRadius: '0.1rem',
-            
-        }}>
+        <div style={nodeStyle} className='react-flow__node-default'>
             <div>{data.label}</div>
-            <Handle type='source' position={Position.Bottom}/>
+            <Handle style={handleStyle} type='source' position={Position.Bottom}/>
         </div>
     )
 }
