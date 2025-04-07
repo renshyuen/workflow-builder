@@ -1,7 +1,8 @@
-import { PositionLoggerNode } from './PositionLoggerNode.jsx';
+import React from 'react';
 import { EndNode } from './EndNode.jsx';
 import { StartNode } from './StartNode.jsx';
 import { ActionNode } from './ActionNode.jsx';
+import { IfElseNode } from './IfElseNode.jsx';
 
 export const initialNodes = [
     {
@@ -21,11 +22,8 @@ export const initialNodes = [
 ];
 
 export const nodeTypes = {
-    'position-logger': PositionLoggerNode,
     'start-node': StartNode,
     'end-node': EndNode,
     'action-node': ActionNode,
-    /**
-     *  custom nodes here
-     */
+    'ifelse-node': IfElseNode,
 };

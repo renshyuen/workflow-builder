@@ -2,7 +2,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 
 
-export function ActionNode({ data }) {
+export function IfElseNode({ data }) {
 
     const nodeStyle = {
         position: 'relative',
@@ -13,7 +13,7 @@ export function ActionNode({ data }) {
     };
 
     return(
-        <div style={nodeStyle} className='react-flow__node-default'> 
+        <div style={nodeStyle} className='react-flow__node-default'>
             <Handle style={handleStyle} type='target' position={Position.Top}/>
             <div>
                 {data.label}
@@ -21,7 +21,6 @@ export function ActionNode({ data }) {
             </div>
             <Handle style={handleStyle} type='source' position={Position.Bottom}/>
         </div>
-        
     );
 
-}
+}   

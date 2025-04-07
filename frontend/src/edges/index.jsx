@@ -1,4 +1,5 @@
-import AddNodeEdge from './AddNodeEdge.tsx';
+import React from 'react';
+import ButtonEdge from './ButtonEdge.jsx';
 
 
 export const initialEdges = [
@@ -6,10 +7,10 @@ export const initialEdges = [
         id: 'start->end',
         source: 'start',
         target: 'end',
-        type: 'add-action-node-edge',
+        type: 'button-edge',
     },
 ];
 
 export const edgeTypes = {
-    'add-action-node-edge': AddNodeEdge,
+    'button-edge': ButtonEdge,
 };
