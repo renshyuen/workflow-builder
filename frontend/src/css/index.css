@@ -1,0 +1,58 @@
+/* import font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* custom properties */
+:root {
+    --font-family: 'Poppins', sans-serif;
+    --font-weight-bold: 700;
+    --font-weight-semibold: 600;
+    --font-weight-regular: 400;
+    --font-weight-light: 300;
+    --primary-colour: #FFFFFF;
+    --secondary-colour: #000000;
+
+    color-scheme: light dark;
+}
+
+/* for desktop screens */
+@media (min-width: 1440px) {
+    :root {
+        --font-size-xl: 4rem;
+        --font-size-lg: 3rem;
+        --font-size-md: 1.5rem;
+        --font-size-sm: 1rem;
+    }
+}
+
+@media (max-width: 1439px) {
+    :root {
+        --font-size-xl: 3rem;
+        --font-size-lg: 2.5rem;
+        --font-size-md: 1.5rem;
+        --font-size-sm: 1rem;
+    }
+}
+
+/* base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+html {
+    font-size: 62.5%;
+}
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-md);
+}
+button {
+    font-family: var(--font-family);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-regular);
+    cursor: pointer;
+}
+#root {
+    width: 100vw;
+    height: 100vh;
+}
