@@ -14,13 +14,6 @@ export function ActionNode({ id, data }) {
         opacity: '0',
     };
 
-    const handleDelete = () => {
-        setEdges((edges) => edges.filter(edge =>
-            edge.source !== id && edge.target !== id
-        ));
-        setNodes((nodes) => nodes.filter(node => node.id !== id));
-    };
-
     return (
         <>
             <div style={nodeStyle} className='react-flow__node-default'>
