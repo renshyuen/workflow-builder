@@ -3,6 +3,8 @@ import { EndNode } from './EndNode.jsx';
 import { StartNode } from './StartNode.jsx';
 import { ActionNode } from './ActionNode.jsx';
 import { IfElseNode } from './IfElseNode.jsx';
+import { BranchNode } from './BranchNode.jsx'; 
+
 
 export const initialNodes = [
     {
@@ -26,4 +28,5 @@ export const nodeTypes = {
     'end-node': EndNode,
     'action-node': ActionNode,
     'ifelse-node': IfElseNode,
+    'branch-node': BranchNode,
 };

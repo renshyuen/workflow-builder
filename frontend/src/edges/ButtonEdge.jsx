@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useReactFlow, BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from '@xyflow/react';
 import NodeBuilder from '../components/NodeBuilder.jsx';
+import EditIfElseNode from '../components/EditIfElseNode.jsx';
 
 
 export default function ButtonEdge({ id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition }) {
 
     const [edgePath, labelX, labelY] = getSmoothStepPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
     const [isNodeBuilderOpen, setIsNodeBuilderOpen] = useState(false);
-    
-    const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+    const { getNodes, setNodes, getEdges, setEdges } = useReactFlow();
     
     const edgeLabelStyle = {
         position: 'absolute',
@@ -19,13 +19,37 @@ export default function ButtonEdge({ id, source, target, sourceX, sourceY, targe
 
     const handleAddNodeClick = (nodeType) => {
 
-        if (nodeType === 'ifelse-node') {   
-            alert('If/Else Node has not been implemented yet!');
-            return;
-        }
-
-        const currentNodes = getNodes();
+        const NODE_WIDTH = 150;
+        const NODE_HEIGHT = 50;
+        const OFFSET_Y = 50;
+        const NODE_INSERTION_POSITION_X = labelX - (NODE_WIDTH / 2);
+        const NODE_INSERTION_POSITION_Y = labelY - (NODE_HEIGHT / 2);
+        const BRANCH_NODE_INSERTION_POSITION_X = NODE_INSERTION_POSITION_X - 200;
+        const BRANCH_NODE_INSERTION_POSITION_Y = NODE_INSERTION_POSITION_Y + 100;
+        const ELSE_NODE_INSERTION_POSITION_X = NODE_INSERTION_POSITION_X + 200;
+        const ELSE_NODE_INSERTION_POSITION_Y = NODE_INSERTION_POSITION_Y + 100;
         const currentEdges = getEdges();
+        const currentNodes = getNodes();
+
+        const adjustDownstreamNodes = (nodeId, offsetY, visited = new Set()) => {
+            if (visited.has(nodeId)) return;
+            visited.add(nodeId);
+
+            currentNodes.forEach((node) => {
+                if (node.id === nodeId) {
+                    node.position = {
+                        x: node.position.x,
+                        y: node.position.y + offsetY,
+                    };
+                }
+            });
+
+            currentEdges.forEach((edge) => {
+                if (edge.source === nodeId) {
+                    adjustDownstreamNodes(edge.target, offsetY, visited);
+                }
+            });
+        };
 
         const adjustUpstreamNodes = (nodeId, offsetY, visited = new Set()) => {
             if (visited.has(nodeId)) return;
@@ -47,62 +71,159 @@ export default function ButtonEdge({ id, source, target, sourceX, sourceY, targe
             });
         };
 
-        const adjustDownstreamNodes = (nodeId, offsetY, visited = new Set()) => {
-            if (visited.has(nodeId)) return;
-            visited.add(nodeId);
+        if (nodeType === 'ifelse-node') { 
+            const targetNode = currentNodes.find(node => node.id === target);
+            setEdges(edges => edges.filter(edge => edge.id !== id));
+            setNodes(nodes => nodes.filter(node => node.id !== target));
 
-            currentNodes.forEach((node) => {
-                if (node.id === nodeId) {
-                    node.position = {
-                        x: node.position.x,
-                        y: node.position.y + offsetY,
-                    };
-                }
-            });
-            
-            currentEdges.forEach((edge) => {
-                if (edge.source === nodeId) {
-                    adjustDownstreamNodes(edge.target, offsetY, visited);
-                }
-            });
-        };
+            const ifElseNodeId = `ifelse-${Date.now()}`;
+            const branchNodeId = `branch-${Date.now()}`;
+            const elseNodeId = `else-${Date.now()}`;
+            const branchEndNodeId = `branchEnd-${Date.now()}`;
+            const elseEndNodeId = `elseEnd-${Date.now()}`;
 
-        adjustDownstreamNodes(target, 50);
-        adjustUpstreamNodes(source, -50);
+            const newNodes = [
+                {
+                    id: ifElseNodeId,
+                    style: { width: NODE_WIDTH, height: NODE_HEIGHT },
+                    data: {
+                        label: 'If Else',
+                        branches: [
+                            {
+                                name: 'Branch',
+                                branchNodeId: branchNodeId,
+                                endNodeId: branchEndNodeId
+                            },
+                            {
+                                name: 'Else',
+                                branchNodeId: elseNodeId,
+                                endNodeId: elseEndNodeId
+                            }
+                        ]
+                    },
+                    position: {
+                        x: NODE_INSERTION_POSITION_X,
+                        y: NODE_INSERTION_POSITION_Y,
+                    },
+                    type: 'ifelse-node',
+                },
+                {
+                    id: branchNodeId,
+                    style: { width: NODE_WIDTH, height: NODE_HEIGHT },
+                    data: { label: 'Branch' },
+                    position: {
+                        x: BRANCH_NODE_INSERTION_POSITION_X,
+                        y: BRANCH_NODE_INSERTION_POSITION_Y,
+                    },
+                    type: 'branch-node',
+                },
+                {
+                    id: branchEndNodeId,
+                    style: { width: NODE_WIDTH, height: NODE_HEIGHT },
+                    data: { label: 'End' },
+                    position: {
+                        x: BRANCH_NODE_INSERTION_POSITION_X,
+                        y: BRANCH_NODE_INSERTION_POSITION_Y + 100,
+                    },
+                    type: 'end-node',
+                },
+                {
+                    id: elseNodeId,
+                    style: { width: NODE_WIDTH, height: NODE_HEIGHT },
+                    data: { label: 'Else' },
+                    position: {
+                        x: ELSE_NODE_INSERTION_POSITION_X,
+                        y: ELSE_NODE_INSERTION_POSITION_Y,
+                    },
+                    type: 'branch-node',
+                },
+                {
+                    id: elseEndNodeId,
+                    style: { width: NODE_WIDTH, height: NODE_HEIGHT },
+                    data: { label: 'End' },
+                    position: {
+                        x: ELSE_NODE_INSERTION_POSITION_X,
+                        y: ELSE_NODE_INSERTION_POSITION_Y + 100,
+                    },
+                    type: 'end-node',
+                },
+            ];
+            const newEdges = [
+                {
+                    id: `${source}->${ifElseNodeId}-${Date.now()}`,
+                    source: source,
+                    target: ifElseNodeId,
+                    type: 'button-edge',
+                },
+                {
+                    id: `${ifElseNodeId}->${branchNodeId}-${Date.now()}`,
+                    source: ifElseNodeId,
+                    target: branchNodeId,
+                    type: 'smoothstep',
+                },
+                {
+                    id: `${branchNodeId}->${branchEndNodeId}-${Date.now()}`,
+                    source: branchNodeId,
+                    target: branchEndNodeId,
+                    type: 'button-edge',
+                },
+                {
+                    id: `${ifElseNodeId}->${elseNodeId}-${Date.now()}`,
+                    source: ifElseNodeId,
+                    target: elseNodeId,
+                    type: 'smoothstep',
+                },
+                {
+                    id: `${elseNodeId}->${elseEndNodeId}-${Date.now()}`,
+                    source: elseNodeId,
+                    target: elseEndNodeId,
+                    type: 'button-edge',
+                },
+            ];
 
-        const newNodeId = `${getNodes().length + 1}`;
+            setEdges(edges => edges.filter(edge => edge.id !== id));
+
+            setNodes(nodes => [...nodes, ...newNodes]);
+            setEdges(edges => [...edges, ...newEdges]);
+
+            return;
+        }
+
+        adjustUpstreamNodes(source, -OFFSET_Y);
+        adjustDownstreamNodes(target, OFFSET_Y);
+
+        setEdges(edges => edges.filter(edge => edge.id !== id));
+
+        const newNodeId = `node-${Date.now()}`;
         const newNode = {
             id: newNodeId,
+            style: { width: 150, height: 50 },
+            data: { label: nodeType === 'action-node' ? 'Action Node' : 'If/Else Node' },
             position: {
-                x: labelX - (150 / 2),
-                y: labelY - (50 / 2),
+                x: NODE_INSERTION_POSITION_X,
+                y: NODE_INSERTION_POSITION_Y,
             },
-            data: { label: nodeType === 'action-node' ? 'Action Node' : 'If Else' },
-            type: nodeType,
+            type: 'action-node',
         };
-        
         const newEdges = [
             {
-                id: `${source}->${newNodeId}`,
+                id: `edge-${source}->${newNodeId}-${Date.now()}`,
                 source: source,
                 target: newNodeId,
                 type: 'button-edge',
             },
             {
-                id: `${newNodeId}->${target}`,
+                id: `edge-${newNodeId}->${target}-${Date.now()}`,
                 source: newNodeId,
                 target: target,
                 type: 'button-edge',
             },
         ];
 
-        const updatedEdges = getEdges().filter(edge => edge.id !== id);
-
         setNodes((nodes) => [...currentNodes, newNode]);
-        setEdges((edges) => [...updatedEdges, ...newEdges]);
+        setEdges((edges) => [...edges, ...newEdges]); 
 
     };
-
 
     return(
         <>
