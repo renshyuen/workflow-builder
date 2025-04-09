@@ -6,79 +6,22 @@ import '../css/editIfElseNode.css';
 
 export default function EditIfElseNode({ nodeId, branches, isOpen, onClose }) {
 
-    const [branchList, setBranchList] = useState(branches || []);
+    const [branchList, setBranchList] = useState((branches || []).map(branch => typeof branch === 'string' ? branch : branch.name));
     const { getNodes, setNodes, getEdges, setEdges } = useReactFlow();
 
-    const NODE_WIDTH = 150;
-    const NODE_HEIGHT = 50;
-
     const onAddBranchClick = () => {
-        /**
-         *  Add a new empty branch input for users and update the branch list.
-         */
-
-        setBranchList([...branchList, '']);
+        setBranchList([...branchList, 'New Branch']);
     };
 
-    let branchCounter = 0;
-    const onSaveClick = () => {
+    const onSaveClick = (event) => {
+        event.preventDefault();
         if (!nodeId) return;
 
         const currentNodes = getNodes();
-        const currentEdges = getEdges();
         const ifElseNode = currentNodes.find(node => node.id === nodeId);
         const existingBranches = ifElseNode.data.branches || [];
-        // const newNodes = [];
-        // const newEdges = [];
-
-        // branchList.forEach((branch, index) => {
-        //     const uniqueId = Date.now() + '-' + index;
-        //     const branchNodeId = `${nodeId}-branch-${uniqueId}-${branchCounter++}`;
-        //     const branchEndNodeId = `${branchNodeId}-end`;
-
-        //     newNodes.push(
-        //         {
-        //             id: branchNodeId,
-        //             style: { width: NODE_WIDTH, height: NODE_HEIGHT },
-        //             data: { label: branch },
-        //             position: {
-        //                 x: currentNodes.find(node => node.id === nodeId).position.x + index * 200,
-        //                 y: currentNodes.find(node => node.id === nodeId).position.y + 100,
-        //             },
-        //             type: 'branch-node',
-        //         },
-        //         {
-        //             id: branchEndNodeId,
-        //             style: { width: NODE_WIDTH, height: NODE_HEIGHT },
-        //             data: { label: 'End' },
-        //             position: {
-        //                 x: currentNodes.find(node => node.id === nodeId).position.x + index * 200,
-        //                 y: currentNodes.find(node => node.id === nodeId).position.y + 200,
-        //             },
-        //             type: 'end-node',
-        //         }
-        //     );
-        //     newEdges.push(
-        //         {
-        //             id: `${nodeId}->${branchNodeId}`,
-        //             source: nodeId,
-        //             target: branchNodeId,
-        //             type: 'smoothstep',
-        //         },
-        //         {
-        //             id: `${branchNodeId}->${branchEndNodeId}`,
-        //             source: branchNodeId,
-        //             target: branchEndNodeId,
-        //             type: 'button-edge',
-        //         }
-        //     );    
-        // });
-
-        // setNodes(nodes => [...nodes, ...newNodes]);
-        // setEdges(edges => [...edges, ...newEdges]);
 
         const updatedBranches = branchList.map((branchName, index) => {
-            // Preserve existing node IDs if available
             const existingBranch = existingBranches[index] || {};
             return {
                 name: branchName,
@@ -86,36 +29,35 @@ export default function EditIfElseNode({ nodeId, branches, isOpen, onClose }) {
                 endNodeId: existingBranch.endNodeId || `end-${nodeId}-${Date.now()}-${index}`
             };
         });
+
+        const nodesToKeep = currentNodes.filter(node => !node.id.startsWith(`${nodeId}-branch`) && !node.id.startsWith(`${nodeId}-end`));
     
-        // Get all nodes to keep (remove old branch nodes)
-        const nodesToKeep = currentNodes.filter(node => 
-            !node.id.startsWith(`${nodeId}-branch`) && 
-            !node.id.startsWith(`${nodeId}-end`)
-        );
-    
-        // Create new nodes array
-        const newNodes = updatedBranches.flatMap((branch, index) => [
-            {
-                id: branch.branchNodeId,
-                data: { label: branch.name },
-                position: {
-                    x: ifElseNode.position.x + (index * 200),
-                    y: ifElseNode.position.y + 100,
+        const newNodes = updatedBranches.flatMap((branch, index) => {
+            const existingBranchNode = currentNodes.find(node => node.id === branch.branchNodeId);
+            const existingEndNode = currentNodes.find(node => node.id === branch.endNodeId);
+
+            return [
+                {
+                    id: branch.branchNodeId,
+                    data: { label: branch.name },
+                    position: existingBranchNode ? existingBranchNode.position : {
+                        x: (ifElseNode.position.x + 200) - (index * 200),
+                        y: ifElseNode.position.y + 100,
+                    },
+                    type: 'branch-node',
                 },
-                type: 'branch-node',
-            },
-            {
-                id: branch.endNodeId,
-                data: { label: 'End' },
-                position: {
-                    x: ifElseNode.position.x + (index * 200),
-                    y: ifElseNode.position.y + 200,
-                },
-                type: 'end-node',
-            }
-        ]);
+                {
+                    id: branch.endNodeId,
+                    data: { label: 'End' },
+                    position: existingEndNode ? existingEndNode.position : {
+                        x: (ifElseNode.position.x + 200) - (index * 200),
+                        y: ifElseNode.position.y + 200,
+                    },
+                    type: 'end-node',
+                }
+            ];
+        });
     
-        // Update edges
         const newEdges = updatedBranches.flatMap(branch => [
             {
                 id: `${nodeId}-${branch.branchNodeId}`,
@@ -131,33 +73,74 @@ export default function EditIfElseNode({ nodeId, branches, isOpen, onClose }) {
             }
         ]);
     
-        // Update the If/Else node with new branch data
-        setNodes([
-            ...nodesToKeep,
-            ...newNodes,
-            {
-                ...ifElseNode,
-                data: {
-                    ...ifElseNode.data,
-                    branches: updatedBranches
-                }
-            }
-        ]);
-    
-        setEdges(edges => [
-            ...edges.filter(edge => !edge.source.startsWith(nodeId)),
-            ...newEdges
-        ]);
+        
+        setNodes([ ...nodesToKeep, ...newNodes, { ...ifElseNode, data: { ...ifElseNode.data, branches: updatedBranches } }]);
+        setEdges(edges => [...edges.filter(edge => !edge.source.startsWith(nodeId)), ...newEdges]);
         
         onClose();
     };
 
     const onDeleteClick = () => {
-        /**
-         *  This deletes the whole If/Else Node and any of the following connected
-         *  existing branches, as well as the end nodes connected. Replaced with an
-         *  end node.
-         */
+        if (!nodeId) return;
+
+        const currentNodes = getNodes();
+        const currentEdges = getEdges();
+        const ifElseNode = currentNodes.find(node => node.id === nodeId);
+
+        if (!ifElseNode) return;
+
+        const newEndNode = {
+            id: `end-${Date.now()}`,
+            data: { label: 'End' },
+            position: ifElseNode.position,
+            type: 'end-node',
+        };
+
+        const incomingEdge = currentEdges.find(edge => edge.target === nodeId);
+
+        const relatedNodes = new Set([nodeId]);
+        const relatedEdges = new Set();
+
+        const branches = ifElseNode.data.branches || [];
+        branches.forEach(branch => {
+            relatedNodes.add(branch.branchNodeId);
+            relatedEdges.add(branch.endNodeId);
+        });
+
+        const findDownstream = (nodeId) => {
+            const outgoingEdges = currentEdges.filter(edge => edge.source === nodeId);
+            outgoingEdges.forEach(edge => {
+                relatedEdges.add(edge.id);
+                if (!relatedNodes.has(edge.target)) {
+                    relatedNodes.add(edge.target);
+                    findDownstream(edge.target);
+                }
+            });
+        };
+
+        branches.forEach(branch => {
+            findDownstream(branch.branchNodeId);
+            findDownstream(branch.endNodeId);
+        });
+
+        const filteredNodes = currentNodes.filter(node => !relatedNodes.has(node.id));
+        const filteredEdges = currentEdges.filter(edge => !relatedNodes.has(edge.source) && !relatedNodes.has(edge.target) && !relatedEdges.has(edge.id));
+
+        const finalNodes = [...filteredNodes, newEndNode];
+        const finalEdges = filteredEdges.filter(edge => edge.id !== incomingEdge?.id);
+
+        if (incomingEdge) {
+            finalEdges.push({
+                ...incomingEdge,
+                target: newEndNode.id,
+                id: `${incomingEdge.source}->${newEndNode.id}`,
+            });
+        }
+
+        setNodes(finalNodes);
+        setEdges(finalEdges);
+
+        onClose();
     };
 
     return createPortal(
@@ -166,11 +149,11 @@ export default function EditIfElseNode({ nodeId, branches, isOpen, onClose }) {
                 <div className='edit-ifelse-node-form-branch-section'>
                     <h3>Branches</h3>
                     {branchList.map((branch, index) => (
-                        <input key={index} type='text' onChange={(entity) => {
+                        <input key={index} value={branch.name} type='text' onChange={(entity) => {
                             const newBranches = [...branchList];
                             newBranches[index] = entity.target.value;
                             setBranchList(newBranches);
-                        }} placeholder='New Branch' />
+                        }} placeholder='Enter branch name..' />
                     ))}
                     <a href='#' onClick={onAddBranchClick}>+ Add Branch</a>
                 </div>

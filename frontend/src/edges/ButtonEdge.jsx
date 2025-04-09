@@ -24,63 +24,42 @@ export default function ButtonEdge({ id, source, target, sourceX, sourceY, targe
         const OFFSET_Y = 50;
         const NODE_INSERTION_POSITION_X = labelX - (NODE_WIDTH / 2);
         const NODE_INSERTION_POSITION_Y = labelY - (NODE_HEIGHT / 2);
-        const BRANCH_NODE_INSERTION_POSITION_X = NODE_INSERTION_POSITION_X - 200;
+        const BRANCH_NODE_INSERTION_POSITION_X = NODE_INSERTION_POSITION_X;
         const BRANCH_NODE_INSERTION_POSITION_Y = NODE_INSERTION_POSITION_Y + 100;
         const ELSE_NODE_INSERTION_POSITION_X = NODE_INSERTION_POSITION_X + 200;
         const ELSE_NODE_INSERTION_POSITION_Y = NODE_INSERTION_POSITION_Y + 100;
         const currentEdges = getEdges();
         const currentNodes = getNodes();
 
-        const adjustDownstreamNodes = (nodeId, offsetY, visited = new Set()) => {
-            if (visited.has(nodeId)) return;
-            visited.add(nodeId);
+        /**
+         *  This is a recursive graph traversal mini-helper function 
+         *  for me to find all the downstream nodes and edges.
+         */
+        const findDownStream = (nodeId, visitedNodes = new Set(), visitedEdges = new Set()) => {
+            if (visitedNodes.has(nodeId)) return;
 
-            currentNodes.forEach((node) => {
-                if (node.id === nodeId) {
-                    node.position = {
-                        x: node.position.x,
-                        y: node.position.y + offsetY,
-                    };
-                }
-            });
+            visitedNodes.add(nodeId);
 
             currentEdges.forEach((edge) => {
                 if (edge.source === nodeId) {
-                    adjustDownstreamNodes(edge.target, offsetY, visited);
-                }
-            });
-        };
-
-        const adjustUpstreamNodes = (nodeId, offsetY, visited = new Set()) => {
-            if (visited.has(nodeId)) return;
-            visited.add(nodeId);
-
-            currentNodes.forEach((node) => {
-                if (node.id === nodeId) {
-                    node.position = {
-                        x: node.position.x,
-                        y: node.position.y + offsetY,
-                    };
-                }
-            });
-
-            currentEdges.forEach((edge) => {
-                if (edge.target === nodeId) {
-                    adjustUpstreamNodes(edge.source, offsetY, visited);
+                    visitedEdges.add(edge.id);
+                    findDownStream(edge.target, visitedNodes, visitedEdges);
                 }
             });
         };
 
         if (nodeType === 'ifelse-node') { 
-            const targetNode = currentNodes.find(node => node.id === target);
-            setEdges(edges => edges.filter(edge => edge.id !== id));
-            setNodes(nodes => nodes.filter(node => node.id !== target));
-
             const ifElseNodeId = `ifelse-${Date.now()}`;
             const branchNodeId = `branch-${Date.now()}`;
-            const elseNodeId = `else-${Date.now()}`;
             const branchEndNodeId = `branchEnd-${Date.now()}`;
+            const elseNodeId = `else-${Date.now()}`;
             const elseEndNodeId = `elseEnd-${Date.now()}`;
+
+            const downstreamNodes = new Set();
+            const downstreamEdges = new Set();
+            findDownStream(target, downstreamNodes, downstreamEdges);
+            setNodes((nodes) => nodes.filter((node) => !downstreamNodes.has(node.id)));
+            setEdges((edges) => edges.filter((edge) => !downstreamEdges.has(edge.id)));
 
             const newNodes = [
                 {
@@ -181,16 +160,11 @@ export default function ButtonEdge({ id, source, target, sourceX, sourceY, targe
                 },
             ];
 
-            setEdges(edges => edges.filter(edge => edge.id !== id));
-
-            setNodes(nodes => [...nodes, ...newNodes]);
-            setEdges(edges => [...edges, ...newEdges]);
+            setNodes((nodes) => [...nodes, ...newNodes]);
+            setEdges((edges) => [...edges, ...newEdges]);
 
             return;
         }
-
-        adjustUpstreamNodes(source, -OFFSET_Y);
-        adjustDownstreamNodes(target, OFFSET_Y);
 
         setEdges(edges => edges.filter(edge => edge.id !== id));
 

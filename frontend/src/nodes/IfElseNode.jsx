@@ -9,7 +9,16 @@ export function IfElseNode({ id, data }) {
 
     const nodeData = {
         ...data,
-        branches: data.branches || [{ name: 'Branch 1' }, { name: 'Else' }]
+        branches: data.branches || [
+            {
+                name: 'Branch',
+                branchNodeId: `${id}-branch`,
+            },
+            {
+                name: 'Else',
+                branchNodeId: `${id}-else`,
+            }
+        ],
     };
 
     const nodeStyle = {
