@@ -3,9 +3,11 @@ import { Handle, Position } from '@xyflow/react';
 
 
 export function StartNode({ data }) {
+
     const nodeStyle = {
         position: 'relative',
     };
+    
     const handleStyle = {
         opacity: '0',
     };
@@ -16,4 +18,5 @@ export function StartNode({ data }) {
             <Handle style={handleStyle} type='source' position={Position.Bottom}/>
         </div>
     )
+
 }
